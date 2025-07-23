@@ -54,6 +54,10 @@ class _CreditCardState extends State<CreditCard> {
   bool _expiryFieldFilled = false;
   bool _cvcFieldFilled = false;
 
+  void _onControllerChanged() {
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
@@ -61,10 +65,21 @@ class _CreditCardState extends State<CreditCard> {
       _tokenizeCard = widget.config.creditCard?.saveCard ?? false;
       _manualPayment = widget.config.creditCard?.manual ?? false;
     });
+
+    // Add listeners to controllers for real-time updates
+    _nameController.addListener(_onControllerChanged);
+    _cardNumberController.addListener(_onControllerChanged);
+    _expiryController.addListener(_onControllerChanged);
+    _cvcController.addListener(_onControllerChanged);
   }
 
   @override
   void dispose() {
+    _nameController.removeListener(_onControllerChanged);
+    _cardNumberController.removeListener(_onControllerChanged);
+    _expiryController.removeListener(_onControllerChanged);
+    _cvcController.removeListener(_onControllerChanged);
+
     _nameController.dispose();
     _cardNumberController.dispose();
     _expiryController.dispose();
@@ -88,14 +103,29 @@ class _CreditCardState extends State<CreditCard> {
 
     closeKeyboard();
 
-    bool isValidForm = _formKey.currentState != null && _formKey.currentState!.validate();
+    // Manually validate all fields
+    _validateName(_nameController.text);
+    _validateCardNumber(_cardNumberController.text);
+    _validateExpiry(_expiryController.text);
+    _validateCVC(_cvcController.text);
 
-    if (!isValidForm) {
-      setState(() => _autoValidateMode = AutovalidateMode.onUserInteraction);
+    // Check if all validations passed
+    if (_nameError != null ||
+        _cardNumberError != null ||
+        _expiryError != null ||
+        _cvcError != null) {
       return;
     }
 
-    _formKey.currentState?.save();
+    // Save the form data
+    _cardData.name = _nameController.text;
+    _cardData.number = CardUtils.getCleanedNumber(_cardNumberController.text);
+
+    List<String> expireDate =
+        CardUtils.getExpiryDate(_expiryController.text.replaceAll('\u200E', ''));
+    _cardData.month = expireDate.first.replaceAll('\u200E', '');
+    _cardData.year = expireDate[1].replaceAll('\u200E', '');
+    _cardData.cvc = _cvcController.text;
 
     final source = CardPaymentRequestSource(
         creditCardData: _cardData, tokenizeCard: _tokenizeCard, manualPayment: _manualPayment);
@@ -175,7 +205,7 @@ class _CreditCardState extends State<CreditCard> {
   @override
   Widget build(BuildContext context) {
     return Form(
-      autovalidateMode: _autoValidateMode,
+      autovalidateMode: AutovalidateMode.disabled, // Changed from onUserInteraction
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -430,9 +460,9 @@ class _CreditCardState extends State<CreditCard> {
         _buildStyledTextField(
           controller: _nameController,
           label: widget.locale.languageCode == 'ar' ? 'اسم حامل البطاقة' : widget.locale.nameOnCard,
-          hint: widget.locale.languageCode == 'ar' ? 'يوسف الزعافي' : 'Enter your name',
+          hint: widget.locale.languageCode == 'ar' ? 'ادخل اسم حامل البطاقة' : 'Enter your name',
           onChanged: _validateName,
-          onSaved: (value) => _cardData.name = value ?? '',
+          onSaved: (value) {},
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp('[a-zA-Z. ]')),
           ],
@@ -448,7 +478,7 @@ class _CreditCardState extends State<CreditCard> {
           label: widget.locale.languageCode == 'ar' ? 'رقم البطاقة' : widget.locale.cardNumber,
           hint: '1234 5678 9012 3456',
           onChanged: _validateCardNumber,
-          onSaved: (value) => _cardData.number = CardUtils.getCleanedNumber(value!),
+          onSaved: (value) {}, // Empty since we use controller
           inputFormatters: [
             FilteringTextInputFormatter.digitsOnly,
             LengthLimitingTextInputFormatter(16),
@@ -468,12 +498,7 @@ class _CreditCardState extends State<CreditCard> {
                 label: widget.locale.languageCode == 'ar' ? 'تاريخ الانتهاء' : widget.locale.expiry,
                 hint: 'MM/YY',
                 onChanged: _validateExpiry,
-                onSaved: (value) {
-                  List<String> expireDate =
-                      CardUtils.getExpiryDate(value!.replaceAll('\u200E', ''));
-                  _cardData.month = expireDate.first.replaceAll('\u200E', '');
-                  _cardData.year = expireDate[1].replaceAll('\u200E', '');
-                },
+                onSaved: (value) {}, // Empty since we use controller
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(4),
@@ -489,7 +514,7 @@ class _CreditCardState extends State<CreditCard> {
                 label: 'CVC',
                 hint: '123',
                 onChanged: _validateCVC,
-                onSaved: (value) => _cardData.cvc = value ?? '',
+                onSaved: (value) {}, // Empty since we use controller
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(4),
@@ -552,9 +577,18 @@ class _CreditCardState extends State<CreditCard> {
             keyboardType: keyboardType,
             textInputAction: TextInputAction.next,
             inputFormatters: inputFormatters,
-            onChanged: onChanged,
+            onChanged: (value) {
+              if (onChanged != null) {
+                onChanged(value);
+              }
+            },
             onSaved: onSaved,
             onTap: onTap,
+            validator: (value) {
+              // Return null to not show validation errors inline
+              // We handle validation in the onChanged method
+              return null;
+            },
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: TextStyle(
@@ -562,6 +596,10 @@ class _CreditCardState extends State<CreditCard> {
                 fontSize: 16,
               ),
               border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              focusedErrorBorder: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 16,
@@ -680,25 +718,33 @@ class _CreditCardState extends State<CreditCard> {
       );
     } else if (cardNumber.startsWith('5') || cardNumber.startsWith('2')) {
       // Mastercard
-      return Container(
-        padding: const EdgeInsets.all(4),
-        child: Row(
+      return SizedBox(
+        width: 40,
+        height: 24,
+        child: Stack(
           children: [
-            Container(
-              width: 16,
-              height: 16,
-              decoration: const BoxDecoration(
-                color: Color(0xFFEB001B),
-                shape: BoxShape.circle,
+            Positioned(
+              left: 4,
+              top: 4,
+              child: Container(
+                width: 16,
+                height: 16,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEB001B),
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
-            Container(
-              width: 16,
-              height: 16,
-              margin: const EdgeInsets.only(left: -8),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF79E1B),
-                shape: BoxShape.circle,
+            Positioned(
+              left: 12,
+              top: 4,
+              child: Container(
+                width: 16,
+                height: 16,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF79E1B),
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
           ],
