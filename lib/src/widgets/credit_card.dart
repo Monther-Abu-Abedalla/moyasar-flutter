@@ -35,8 +35,6 @@ class _CreditCardState extends State<CreditCard> {
   final TextEditingController _expiryController = TextEditingController();
   final TextEditingController _cvcController = TextEditingController();
 
-  AutovalidateMode _autoValidateMode = AutovalidateMode.onUserInteraction;
-
   bool _isSubmitting = false;
   bool _tokenizeCard = false;
   bool _manualPayment = false;
@@ -205,7 +203,7 @@ class _CreditCardState extends State<CreditCard> {
   @override
   Widget build(BuildContext context) {
     return Form(
-      autovalidateMode: AutovalidateMode.disabled, // Changed from onUserInteraction
+      autovalidateMode: AutovalidateMode.disabled,
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,9 +458,9 @@ class _CreditCardState extends State<CreditCard> {
         _buildStyledTextField(
           controller: _nameController,
           label: widget.locale.languageCode == 'ar' ? 'اسم حامل البطاقة' : widget.locale.nameOnCard,
-          hint: widget.locale.languageCode == 'ar' ? 'ادخل اسم حامل البطاقة' : 'Enter your name',
+          hint: widget.locale.languageCode == 'ar' ? 'يوسف الزعافي' : 'Enter your name',
           onChanged: _validateName,
-          onSaved: (value) {},
+          onSaved: (value) {}, // Empty since we use controller
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp('[a-zA-Z. ]')),
           ],
@@ -556,59 +554,72 @@ class _CreditCardState extends State<CreditCard> {
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: error != null ? Colors.red : Colors.grey.shade300,
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: TextFormField(
-            controller: controller,
-            keyboardType: keyboardType,
-            textInputAction: TextInputAction.next,
-            inputFormatters: inputFormatters,
-            onChanged: (value) {
-              if (onChanged != null) {
-                onChanged(value);
-              }
-            },
-            onSaved: onSaved,
-            onTap: onTap,
-            validator: (value) {
-              // Return null to not show validation errors inline
-              // We handle validation in the onChanged method
-              return null;
-            },
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: TextStyle(
-                color: Colors.grey.shade400,
-                fontSize: 16,
-              ),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              errorBorder: InputBorder.none,
-              focusedErrorBorder: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
-            ),
-            style: const TextStyle(
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          textInputAction: TextInputAction.next,
+          inputFormatters: inputFormatters,
+          onChanged: (value) {
+            if (onChanged != null) {
+              onChanged(value);
+            }
+          },
+          onSaved: onSaved,
+          onTap: onTap,
+          validator: (value) {
+            return null; // No inline validation
+          },
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
               fontSize: 16,
-              fontWeight: FontWeight.w500,
             ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: error != null ? Colors.red : Colors.grey.shade300,
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: error != null ? Colors.red : Colors.grey.shade300,
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: error != null ? Colors.red : const Color(0xFF667eea),
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 1.5,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 2,
+              ),
+            ),
+          ),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -756,7 +767,6 @@ class _CreditCardState extends State<CreditCard> {
   }
 }
 
-// Keep your existing SaveCardNotice and other helper classes/functions
 class SaveCardNotice extends StatelessWidget {
   const SaveCardNotice({super.key, required this.tokenizeCard, required this.locale});
 
