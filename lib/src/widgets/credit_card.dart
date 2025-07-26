@@ -458,7 +458,7 @@ class _CreditCardState extends State<CreditCard> {
         _buildStyledTextField(
           controller: _nameController,
           label: widget.locale.languageCode == 'ar' ? 'اسم حامل البطاقة' : widget.locale.nameOnCard,
-          hint: widget.locale.languageCode == 'ar' ? 'يوسف الزعافي' : 'Enter your name',
+          hint: widget.locale.languageCode == 'ar' ? 'اسم حامل البطاقة باللغة الانجليزية' : 'Enter cardholder name in English',
           onChanged: _validateName,
           onSaved: (value) {}, // Empty since we use controller
           inputFormatters: [
