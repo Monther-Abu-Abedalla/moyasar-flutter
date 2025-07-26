@@ -274,47 +274,50 @@ class _STCPaymentFormState extends State<STCPaymentComponent> {
             const SizedBox(height: 12),
 
             // TextField without the old errorText under it
-            TextField(
-              controller: _controller,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[\d ]')),
-                LengthLimitingTextInputFormatter(12), // 05x xxx xxxx = 12 chars
-              ],
-              decoration: InputDecoration(
-                hintText: '05x xxx xxxx',
-                hintStyle: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 20,
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: TextField(
+                controller: _controller,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[\d ]')),
+                  LengthLimitingTextInputFormatter(12), // 05x xxx xxxx = 12 chars
+                ],
+                decoration: InputDecoration(
+                  hintText: '05x xxx xxxx',
+                  hintStyle: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 20,
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 12.0,
+                    horizontal: 16.0,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0),
+                    borderSide: BorderSide(color: purpleColor, width: 1.5),
+                  ),
+                  // ▼ Removed the old errorText here
+                  // errorText: _controller.text.isNotEmpty && !_isValid
+                  //     ? widget.locale.invalidPhoneNumber
+                  //     : null,
                 ),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 12.0,
-                  horizontal: 16.0,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                  borderSide: BorderSide(color: purpleColor, width: 1.5),
-                ),
-                // ▼ Removed the old errorText here
-                // errorText: _controller.text.isNotEmpty && !_isValid
-                //     ? widget.locale.invalidPhoneNumber
-                //     : null,
+                style: const TextStyle(fontSize: 20),
+                onChanged: (_) {
+                  // ensure label updates when user types
+                  setState(() {});
+                },
               ),
-              style: const TextStyle(fontSize: 20),
-              onChanged: (_) {
-                // ensure label updates when user types
-                setState(() {});
-              },
             ),
 
             const SizedBox(height: 32),

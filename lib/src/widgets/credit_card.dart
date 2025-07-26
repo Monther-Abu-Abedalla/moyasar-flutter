@@ -471,18 +471,21 @@ class _CreditCardState extends State<CreditCard> {
         const SizedBox(height: 16),
 
         // Card Number Field
-        _buildStyledTextField(
-          controller: _cardNumberController,
-          label: widget.locale.languageCode == 'ar' ? 'رقم البطاقة' : widget.locale.cardNumber,
-          hint: '1234 5678 9012 3456',
-          onChanged: _validateCardNumber,
-          onSaved: (value) {}, // Empty since we use controller
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(16),
-            CardNumberInputFormatter(),
-          ],
-          error: _cardNumberError,
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: _buildStyledTextField(
+            controller: _cardNumberController,
+            label: widget.locale.languageCode == 'ar' ? 'رقم البطاقة' : widget.locale.cardNumber,
+            hint: '1234 5678 9012 3456',
+            onChanged: _validateCardNumber,
+            onSaved: (value) {}, // Empty since we use controller
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(16),
+              CardNumberInputFormatter(),
+            ],
+            error: _cardNumberError,
+          ),
         ),
 
         const SizedBox(height: 16),
